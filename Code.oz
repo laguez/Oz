@@ -3,7 +3,7 @@ local
    % Please replace this path with your own working directory that contains LethOzLib.ozf
 
    % Dossier = {Property.condGet cwdir '/home/max/FSAB1402/Projet-2017'} % Unix example
-   Dossier = {Property.condGet cwdir 'linfo1104/2024/code/StudentPack/'}
+   Dossier = {Property.condGet cwdir 'C:\\Users\\Utilisateur\\Bureau\\Oz\\Projet\\Oz'}
    % Dossier = {Property.condGet cwdir 'C:\\Users\Thomas\Documents\UCL\Oz\Projet'} % Windows example.
    LethOzLib
 
@@ -33,8 +33,354 @@ in
    local
       % Déclarez vos functions ici
       % Declare your functions here
-      X
-   in
+      declare
+         Space = spaceship(
+            positions:[pos(x:4 y:2 to:east) pos(x:3 y:2 to:east) pos(x:2 y:2 to:east)]
+            effects:nil
+            )
+         Spaceship = spaceship(
+            positions:[pos(x:4 y:3 to:south) pos(x:4 y:2 to:south) pos(x:4 y:1 to:east)]
+            effects: [revert scrap wormhole(x:10 y:1) wormhole(x:1 y:5) scrap revert]
+            )
+
+         FuriousSpaceship = spaceship(
+            positions:[pos(x:4 y:1 to:west) pos(x:4 y:2 to:north) pos(x:4 y:3 to:north)]
+            effects:nil
+            )
+      
+         fun {DeleteWormhole Spaceship}
+            fun{DeleteWormhole Spaceship Effets}
+               case Effets
+               of nil then nil 
+               [] H|T then 
+                  if H == scrap orelse H == revert then
+                     H|{DeleteWormhole Spaceship T} 
+                  else 
+                     {DeleteWormhole Spaceship T}
+                  end 
+               end 
+            end 
+         in   
+            {DeleteWormhole Spaceship Spaceship.effects}
+         end 
+
+         %{Browse {DeleteWormhole Spaceship}}
+
+         fun {DeleteScrap Spaceship} 
+            fun {DeleteScrap Spaceship Effets}
+               case Effets
+               of nil then nil 
+               [] H|T then 
+                  if H \= scrap  then
+                     H|{DeleteScrap Spaceship T} 
+                  else 
+                     {DeleteScrap Spaceship T}
+                  end 
+               end 
+            end 
+         in 
+            {DeleteScrap Spaceship Spaceship.effects}
+         end 
+
+         %{Browse {DeleteScrap Spaceship}}
+
+         fun {DeleteRevert Spaceship} 
+            fun {DeleteRevert Spaceship Effets} 
+               case Effets 
+               of nil then nil 
+               [] H|T then 
+                  if H \= revert then 
+                     H|{DeleteRevert Spaceship T} 
+                  else 
+                     {DeleteRevert Spaceship T}
+                  end 
+               end 
+            end 
+         in 
+            {DeleteRevert Spaceship Spaceship.effects} 
+         end 
+
+         %{Browse {DeleteRevert Spaceship}}
+
+         fun {Scrap Spaceship}
+            fun {Scrap Spaceship Positions Head} 
+               case Positions
+               of nil then
+                  if Head.to == east then  
+                     local Last in 
+                     Last = pos(x:Head.x-1 y:Head.y to:Head.to)
+                     Last|nil
+                     end 
+                  elseif Head.to == west then 
+                     local Last in 
+                     Last = pos(x:Head.x+1 y:Head.y to:Head.to) 
+                     Last|nil
+                     end 
+                  elseif Head.to == north then 
+                     local Last in 
+                     Last = pos(x:Head.x y:Head.y+1 to:Head.to) 
+                     Last|nil
+                     end 
+                  elseif Head.to == south then 
+                     local Last in 
+                     Last = pos(x:Head.x y:Head.y-1 to: Head.to) 
+                     Last|nil
+                     end
+                  end 
+               [] V|D then V|{Scrap Spaceship D V}
+               end 
+                
+            end 
+         in 
+            {Scrap Spaceship Spaceship.positions Spaceship.positions.1}
+         end 
+
+         %{Browse {Scrap Spaceship}}
+
+         fun {Reverse Spaceship}
+            fun {Reverse Spaceship Positions NewPositions}
+               case NewPositions 
+               of nil then
+                  {Reverse Spaceship Positions.2 Positions.1|nil}
+               else
+                  case Positions 
+                  of nil then 
+                     local NewSpaceship in 
+                     NewSpaceship = spaceship(positions:NewPositions effects:Spaceship.effects)
+                     end 
+                  [] H|T then 
+                     {Reverse Spaceship T H|NewPositions}
+                  end 
+               end
+            end 
+         in 
+            {Reverse Spaceship Spaceship.positions nil}
+         end 
+
+         %{Browse {Reverse Spaceship}}
+
+         fun {TailSpacePos Spaceship} 
+            fun {TailSpacePos Spaceship Positions}
+               local NewSpaceship in
+                  if Positions.1 == nil then 
+                     NewSpaceship = {AdjoinAt Spaceship positions nil}
+                  else 
+                     NewSpaceship = {AdjoinAt Spaceship positions Positions.2}
+                  end 
+               end 
+            end 
+         in 
+            {TailSpacePos Spaceship Spaceship.positions }
+         end 
+
+         %R = {Reverse Spaceship}
+         %{Browse {TailSpacePos {TailSpacePos {TailSpacePos R}}}}
+
+         %{Browse {TailSpacePos Spaceship}}
+
+         fun {Revert Spaceship}
+            fun {Revert Spaceship Inverse Positions}
+               case Positions 
+               of nil then nil 
+               [] V|D then   
+                  if V.to == east then 
+                     local Element in 
+                        Element = pos(x:V.x y:V.y to:west) 
+                        Element|{Revert Spaceship Inverse D}
+                     end 
+                  elseif V.to == west then 
+                     local Element in 
+                        Element = pos(x:V.x y:V.y to:east) 
+                        Element|{Revert Spaceship Inverse D}
+                     end 
+                  elseif V.to == north then 
+                     local Element in 
+                        Element = pos(x:V.x y:V.y to:south) 
+                        Element|{Revert Spaceship Inverse D}
+                     end 
+                  elseif V.to == south then 
+                     local Element in 
+                        Element = pos(x:V.x y:V.y to:north) 
+                        Element|{Revert Spaceship Inverse D}
+                     end   
+                  end 
+               end 
+            end 
+         in 
+            local Inverse in 
+            Inverse = {Reverse Spaceship} 
+            {Revert Spaceship Inverse Inverse.positions}
+            end 
+         end
+
+         %{Browse {Revert Spaceship}}
+         
+
+         fun {Worm Spaceship}
+            fun {Worm Spaceship Positions Teleport}
+               case Positions 
+               of nil then nil 
+               [] V|D then 
+                  pos(x:V.x+Teleport.x y:V.y+Teleport.y to:V.to)|{Worm Spaceship D Teleport}
+               end 
+            end 
+         in 
+            {Worm Spaceship Spaceship.positions Spaceship.effects.1}
+         end 
+
+         %{Browse {Worm Spaceship}}
+
+         fun {Forward Spaceship}
+            fun {Forward Spaceship Positions Stop}
+               case Positions
+               of nil then nil 
+               [] V|D then 
+                  if V.to == east andthen Stop == false then
+                        local Newpos in  
+                        Newpos = pos(x:V.x y:V.y to:V.to)
+                        pos(x:V.x+1 y:V.y to:V.to)|{Forward Spaceship Newpos|D true}  
+                        end    
+                  elseif V.to == south andthen Stop == false then 
+                        local Newpos in  
+                        Newpos = pos(x:V.x y:V.y to:V.to)
+                        pos(x:V.x y:V.y+1 to:V.to)|{Forward Spaceship Newpos|D true}  
+                        end   
+                  elseif V.to == north andthen Stop == false then 
+                        local Newpos in  
+                        Newpos = pos(x:V.x y:V.y to:V.to)
+                        pos(x:V.x y:V.y-1 to:V.to)|{Forward Spaceship Newpos|D true}  
+                        end   
+                  elseif V.to == west andthen Stop == false then
+                        local Newpos in 
+                        Newpos = pos(x:V.x y:V.y to:V.to)
+                        pos(x:V.x-1 y:V.y to:V.to)|{Forward Spaceship Newpos|D true} 
+                        end 
+                  else
+                     if {Length D} == 1 then V|nil 
+                     else 
+                        V|{Forward Spaceship D true}
+                     end 
+                  end 
+               end  
+            end 
+         in 
+            {Forward Spaceship Spaceship.positions false}
+         end 
+
+         fun {Left Spaceship}
+            fun {Left Spaceship Positions Stop} 
+               case Positions
+               of nil then nil 
+               [] V|D then 
+                  if V.to == east andthen Stop == false then
+                        local Newpos in  
+                        Newpos = pos(x:V.x y:V.y to:north)
+                        pos(x:V.x y:V.y-1 to:north)|{Left Spaceship Newpos|D true}  
+                        end    
+                  elseif V.to == south andthen Stop == false then 
+                        local Newpos in  
+                        Newpos = pos(x:V.x y:V.y to:east)
+                        pos(x:V.x+1 y:V.y to:east)|{Left Spaceship Newpos|D true}  
+                        end   
+                  elseif V.to == north andthen Stop == false then 
+                        local Newpos in  
+                        Newpos = pos(x:V.x y:V.y to:west)
+                        pos(x:V.x-1 y:V.y to:west)|{Left Spaceship Newpos|D true}  
+                        end   
+                  elseif V.to == west andthen Stop == false then
+                        local Newpos in 
+                        Newpos = pos(x:V.x y:V.y to:south)
+                        pos(x:V.x y:V.y+1 to:south)|{Left Spaceship Newpos|D true} 
+                        end 
+                  else
+                     if {Length D} == 1 then V|nil 
+                     else 
+                        V|{Left Spaceship D true}
+                     end 
+                  end
+               end 
+            end
+         in 
+            {Left Spaceship Spaceship.positions false}
+         end 
+
+         fun {Right Spaceship} 
+            fun {Right Spaceship Positions Stop}
+               case Positions
+               of nil then nil 
+               [] V|D then 
+                  if V.to == east andthen Stop == false then
+                        local Newpos in  
+                        Newpos = pos(x:V.x y:V.y to:south)
+                        pos(x:V.x y:V.y+1 to:south)|{Right Spaceship Newpos|D true}  
+                        end    
+                  elseif V.to == south andthen Stop == false then 
+                        local Newpos in  
+                        Newpos = pos(x:V.x y:V.y to:west)
+                        pos(x:V.x-1 y:V.y to:west)|{Right Spaceship Newpos|D true}  
+                        end   
+                  elseif V.to == north andthen Stop == false then 
+                        local Newpos in  
+                        Newpos = pos(x:V.x y:V.y to:east)
+                        pos(x:V.x+1 y:V.y to:east)|{Right Spaceship Newpos|D true}  
+                        end   
+                  elseif V.to == west andthen Stop == false then
+                        local Newpos in 
+                        Newpos = pos(x:V.x y:V.y to:north)
+                        pos(x:V.x y:V.y-1 to:north)|{Right Spaceship Newpos|D true} 
+                        end 
+                  else
+                     if {Length D} == 1 then V|nil 
+                     else 
+                        V|{Right Spaceship D true}
+                     end 
+                  end
+               end 
+            end 
+         in 
+            {Right Spaceship Spaceship.positions false} 
+         end
+
+         fun {Move Spaceship Instruction}
+            if Instruction == forward then
+               {Forward Spaceship}
+            elseif Instruction == turn(right) then
+               {Right Spaceship}
+            else 
+               {Left Spaceship} 
+            end   
+         end 
+
+         %{Browse {Move FuriousSpaceship turn(right)}}
+
+         fun {Effects Spaceship} 
+            fun {Effects Spaceship Effets}
+               local NewSpaceship in
+                  case Effets 
+                  of nil then Spaceship
+                  [] V|D then 
+                     if V == scrap then
+                        NewSpaceship = spaceship(positions:{Scrap Spaceship} effects:{DeleteScrap Spaceship}) 
+                     elseif V == revert then 
+                        NewSpaceship = spaceship(positions:{Revert Spaceship} effects:{DeleteRevert Spaceship})
+                     else 
+                        NewSpaceship = spaceship(positions:{Worm Spaceship} effects:{DeleteWormhole Spaceship})
+                     end 
+                  end 
+               end 
+            end 
+         in 
+            {Effects Spaceship Spaceship.effects}
+         end 
+
+         %{Browse {Effects Spaceship}}
+
+
+          % Ajouter une nouvelle position à la liste de positions du vaisseau spatial
+          Testspace = {AdjoinAt Spaceship positions {Scrap Spaceship}}
+          %{Browse Testspace}
+
+
       % La fonction qui renvoit les nouveaux attributs du serpent après prise
       % en compte des effets qui l'affectent et de son instruction
       % The function that computes the next attributes of the spaceship given the effects
@@ -52,9 +398,19 @@ in
       %               effects: [scrap|revert|wormhole(x:<P> y:<P>)|... ...]
       %            )
       fun {Next Spaceship Instruction}
-         {Browse Instruction}
-         Spaceship
-      end
+         local NewSpaceship EffetsShip in 
+            EffetsShip = {Effects Spaceship}
+            NewSpaceship = spaceship(positions:{Move EffetsShip Instruction} effects:EffetsShip.effects)
+         end 
+      end   
+
+      R = {Next Spaceship turn(right)}
+      {Browse R}
+
+      
+
+
+
 
       
       % La fonction qui décode la stratégie d'un serpent en une liste de fonctions. Chacune correspond
@@ -102,3 +458,5 @@ in
       {Browse R}
    end
 end
+
+
