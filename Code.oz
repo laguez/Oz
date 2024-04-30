@@ -37,15 +37,20 @@ in
          Space = spaceship(
             positions:[pos(x:4 y:2 to:east) pos(x:3 y:2 to:east) pos(x:2 y:2 to:east)]
             effects:nil
+            strategy : nil 
             )
+
          Spaceship = spaceship(
             positions:[pos(x:4 y:3 to:south) pos(x:4 y:2 to:south) pos(x:4 y:1 to:east)]
-            effects: [revert scrap wormhole(x:10 y:1) wormhole(x:1 y:5) scrap revert]
-            )
+           effects: [revert scrap wormhole(x:10 y:1) wormhole(x:1 y:5) scrap revert]
+           strategy : nil
+           )
+
 
          FuriousSpaceship = spaceship(
             positions:[pos(x:4 y:1 to:west) pos(x:4 y:2 to:north) pos(x:4 y:3 to:north)]
             effects:nil
+            strategy : [turn(right) turn(right) repeat([turn(right)] times:2)]
             )
       
          fun {DeleteWormhole Spaceship}
@@ -349,18 +354,37 @@ in
             else 
                {Left Spaceship} 
             end   
+         end
+
+         fun{Repeat Strategy}
+            case Strategy 
+            of nil then nil
+            [] repeat(M times:T) then 
+               if T == 0 then
+                  if M.2 == nil then 
+                     nil 
+                  else  
+                     {Repeat M.2.1}
+                  end
+               else
+                  M.1|{Repeat repeat(M times:T-1)}
+               end 
+            end
          end 
 
+         %{Browse {Repeat R}}
+         
          %{Browse {Move FuriousSpaceship turn(right)}}
 
-         fun {Effects Spaceship} 
-            fun {Effects Spaceship Effets}
+         fun {Effects Spaceship Instruction} 
+            fun {Effects Spaceship Instruction Effets}
                local NewSpaceship in
                   case Effets 
-                  of nil then Spaceship
+                  of nil then 
+                     NewSpaceship = spaceship(positions:{Move Spaceship Instruction} effects:Effets) 
                   [] V|D then 
                      if V == scrap then
-                        NewSpaceship = spaceship(positions:{Scrap Spaceship} effects:{DeleteScrap Spaceship}) 
+                        NewSpaceship = spaceship(positions:{Move Spaceship Instruction} effects:Effects) 
                      elseif V == revert then 
                         NewSpaceship = spaceship(positions:{Revert Spaceship} effects:{DeleteRevert Spaceship})
                      else 
@@ -370,17 +394,18 @@ in
                end 
             end 
          in 
-            {Effects Spaceship Spaceship.effects}
-         end 
+            {Effects Spaceship Instruction Spaceship.effects}
+         end    
 
-         %{Browse {Effects Spaceship}}
+
+
 
 
           % Ajouter une nouvelle position à la liste de positions du vaisseau spatial
           Testspace = {AdjoinAt Spaceship positions {Scrap Spaceship}}
           %{Browse Testspace}
 
-
+          
       % La fonction qui renvoit les nouveaux attributs du serpent après prise
       % en compte des effets qui l'affectent et de son instruction
       % The function that computes the next attributes of the spaceship given the effects
@@ -398,21 +423,24 @@ in
       %               effects: [scrap|revert|wormhole(x:<P> y:<P>)|... ...]
       %            )
       fun {Next Spaceship Instruction}
-         local NewSpaceship EffetsShip in 
-            EffetsShip = {Effects Spaceship}
-            NewSpaceship = spaceship(positions:{Move EffetsShip Instruction} effects:EffetsShip.effects)
+         local ReturnSpaceship EffetShip in 
+            EffetShip = {Effects Spaceship Instruction}
+            case Spaceship.effects
+            of nil then EffetShip
+            [] V|D then 
+               if V == scrap then 
+                  ReturnSpaceship = spaceship(positions:{Move EffetShip Instruction} effects:{DeleteScrap EffetShip})
+               else
+                  ReturnSpaceship = spaceship(positions:{Move EffetShip Instruction} effects:EffetShip.effects) 
+               end 
+            end 
          end 
       end   
 
-      R = {Next Spaceship turn(right)}
-      {Browse R}
+         R = {Next FuriousSpaceship turn(right)}
+         {Browse R}
+         {Browse {Next R turn(right)}}
 
-      
-
-
-
-
-      
       % La fonction qui décode la stratégie d'un serpent en une liste de fonctions. Chacune correspond
       % à un instant du jeu et applique l'instruction devant être exécutée à cet instant au spaceship
       % passé en argument
@@ -423,13 +451,37 @@ in
       % strategy ::= <instruction> '|' <strategy>
       %            | repeat(<strategy> times:<integer>) '|' <strategy>
       %            | nil
-      fun {DecodeStrategy Strategy}
-         [
-            fun{$ Spaceship}
-               Spaceship
+      fun {DecodeStrategyAux Strategy List}
+         case Strategy of nil then List
+         [] H|T then 
+            case {Label H} of turn then
+               case H of turn(right) then
+                  {DecodeStrategyAux T {Append List [fun {$ Spaceship} {Next Spaceship H} end]}}
+               [] turn(left) then
+                  {DecodeStrategyAux T {Append List [fun {$ Spaceship} {Next Spaceship H} end]}}
+               end
+            [] repeat then
+               case H.1 of nil then nil
+               [] F|S then
+                  {DecodeStrategyAux {Append {Repeat H} T} List}
+               end
+            [] forward then 
+                 {DecodeStrategyAux T {Append List [fun {$ Spaceship} {Next Spaceship H} end]}}
             end
-         ]
+         end
+      end 
+      fun {DecodeStrategy Strategy}
+         case Strategy of nil then nil
+         [] H|T then {DecodeStrategyAux Strategy nil}
+         end
       end
+
+      DecodedFunctions = {DecodeStrategy FuriousSpaceship.strategy}   
+      {Browse DecodedFunctions}
+
+
+
+
 
       % Options
       Options = options(
@@ -455,7 +507,7 @@ in
    local 
       R = {LethOzLib.play Dossier#'/'#Options.scenario Next DecodeStrategy Options}
    in
-      {Browse R}
+      %{Browse R}
    end
 end
 
