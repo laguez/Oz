@@ -42,18 +42,16 @@ in
 
          D = dropSeismicCharge(true|false|true|false|true|nil) % To access the list in the dropSeismicCHarge we have to use this call D.1
 
-         
          Spaceship = spaceship(
             positions:[pos(x:4 y:3 to:south) pos(x:4 y:2 to:south) pos(x:4 y:1 to:east)]
-           effects: [revert scrap wormhole(x:10 y:1) wormhole(x:1 y:5) scrap revert]
+           effects: [wormhole(x:10 y:1) wormhole(x:1 y:5) scrap revert]
            strategy : nil
            )
-
 
          FuriousSpaceship = spaceship(
             positions:[pos(x:4 y:1 to:west) pos(x:4 y:2 to:north) pos(x:4 y:3 to:north)]
             effects:nil
-            strategy : [turn(right) turn(right) repeat([turn(right)] times:2)]
+            strategy : [repeat([turn(right)] times:2)]
             )
       
          fun {DeleteWormhole Spaceship}
@@ -139,9 +137,10 @@ in
                end 
                 
             end 
-         in 
+         in
             {Scrap Spaceship Spaceship.positions Spaceship.positions.1}
-         end 
+         end
+         
 
          %{Browse {Scrap Spaceship}}
 
@@ -167,22 +166,7 @@ in
 
          %{Browse {Reverse Spaceship}}
 
-         fun {TailSpacePos Spaceship} 
-            fun {TailSpacePos Spaceship Positions}
-               local NewSpaceship in
-                  if Positions.1 == nil then 
-                     NewSpaceship = {AdjoinAt Spaceship positions nil}
-                  else 
-                     NewSpaceship = {AdjoinAt Spaceship positions Positions.2}
-                  end 
-               end 
-            end 
-         in 
-            {TailSpacePos Spaceship Spaceship.positions }
-         end 
-
          %R = {Reverse Spaceship}
-         %{Browse {TailSpacePos {TailSpacePos {TailSpacePos R}}}}
 
          %{Browse {TailSpacePos Spaceship}}
 
@@ -221,9 +205,9 @@ in
             end 
          end
 
-         %{Browse {Revert Spaceship}}
-         
+      %{Browse FuriousSpaceship.strategy}
 
+      
          fun {Worm Spaceship}
             fun {Worm Spaceship Positions Teleport}
                case Positions 
@@ -373,11 +357,10 @@ in
                   M.1|{Repeat repeat(M times:T-1)}
                end 
             end
-         end 
+         end         
 
-         %{Browse {Repeat R}}
+         % {Browse {Repeat FuriousSpaceship.strategy.1}}
          
-         %{Browse {Move FuriousSpaceship turn(right)}}
 
          fun {Effects Spaceship Instruction} 
             fun {Effects Spaceship Instruction Effets}
@@ -387,7 +370,7 @@ in
                      NewSpaceship = spaceship(positions:{Move Spaceship Instruction} effects:Effets) 
                   [] V|D then 
                      case V 
-                     of nil then nil 
+                     of nil then nil
                      [] scrap then
                         NewSpaceship = spaceship(positions:{Scrap Spaceship} effects:{DeleteScrap Spaceship}) 
                      [] revert then 
@@ -397,7 +380,7 @@ in
                      end 
                   end 
                end 
-            end 
+            end
          in 
             {Effects Spaceship Instruction Spaceship.effects}
          end    
@@ -487,7 +470,7 @@ in
       Options = options(
 		   % Fichier contenant le scénario (depuis Dossier)
 		   % Path of the scenario (relative to Dossier)
-		   scenario:'scenario/scenario_test_moves.oz'
+		   scenario:'scenario/scenario_test_grow.oz'
 		   % Utilisez cette touche pour quitter la fenêtre
 		   % Use this key to leave the graphical mode
 		   closeKey:'Escape'
