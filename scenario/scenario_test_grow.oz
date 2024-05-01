@@ -17,7 +17,7 @@ in
 			   strategy: [forward forward forward forward forward forward forward]
 			   seismicCharge: NoBomb
 			  )
-		     spaceship(team:red name:patrick
+		     spaceship(team:black name:patrick
 			   positions: [pos(x:13 y:9 to:south) pos(x:13 y:8 to:south) pos(x:13 y:7 to:south)]
 			   effects: nil
 			   strategy: [forward forward forward forward forward]
