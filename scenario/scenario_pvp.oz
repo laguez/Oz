@@ -24,7 +24,7 @@ in
 		      bonus(position:pos(x:17 y:17) color:yellow effect:wormhole(x:6 y:6) target:catcher)
 
 			  % Normal bonuses
-		      bonus(position:pos(x:11 y:11) color:red effect:revert target:opponents)
+		      bonus(position:pos(x:11 y:11) color:red effect:revert target:catcher)
 		      bonus(position:pos(x:12 y:12) color:black effect:scrap target:catcher)
 		     ]
 	    bombs: nil
