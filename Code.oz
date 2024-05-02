@@ -257,6 +257,26 @@ in
          end 
 
          %{Browse {Bomber Space}}
+
+      % La fonction qui inverse les instructions turn(left) et turn(right) pour N étapes
+      fun {ApplyMalware Strategy N}
+         case N
+         of 0 then Strategy % Si N est 0, pas de modification
+         else
+            case Strategy
+            of nil then nil
+            [] H|T then
+               case H
+               of turn(left) then
+                  turn(right)|{ApplyMalware T N-1} % Inverser turn(left) en turn(right)
+               [] turn(right) then
+                  turn(left)|{ApplyMalware T N-1} % Inverser turn(right) en turn(left)
+               else
+                  H|{ApplyMalware T N} % Si ce n'est pas une instruction de rotation, la laisser inchangée
+               end
+            end
+         end
+      end 
          
          % La fonction va inverser les positions du vaisseaux de telle manière à ce que la première élement soit le dernier et ainsi de suite tout en conservant la  direction  
          %:input: 
