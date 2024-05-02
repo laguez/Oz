@@ -32,8 +32,7 @@ in
 
    local
       % Déclarez vos functions ici
-      % Declare your functions here
-       
+      % Declare your functions here 
          NoBomb=false|NoBomb
          Space = spaceship(
             positions:[pos(x:4 y:2 to:east)]
@@ -47,14 +46,14 @@ in
 
          Spaceship = spaceship(
             positions:[pos(x:4 y:3 to:south) pos(x:4 y:2 to:south) pos(x:4 y:1 to:east)]
-           effects: [minus wormhole(x:10 y:1) wormhole(x:1 y:5) scrap revert]
+           effects: [wormhole(x:10 y:1) wormhole(x:1 y:5) scrap revert]
            strategy : nil
            seismicCharge : NoBomb
          )
 
          FuriousSpaceship = spaceship(
             positions:[pos(x:4 y:1 to:west) pos(x:4 y:2 to:north) pos(x:4 y:3 to:north)]
-            effects:[minus dropSeismicCharge(true|nil) scrap ] 
+            effects:[wormhole(x:10 y:10) minus dropSeismicCharge(true|nil) scrap ] 
             strategy : [repeat([turn(right)] times:2)]
             seismicCharge : NoBomb
             )
@@ -456,15 +455,27 @@ in
          %               effects: [dropSeismicCharge(H|T)|revert|wormhole(x:X y:Y)|scrap|revert|wormhole(x:X y:Y)|scrap|dropSeismicCharge(H|T)... ...]
          %            )
          fun {Worm Spaceship}
-            fun {Worm Spaceship Positions Teleport}
+            fun {Worm Spaceship Positions Teleport Stop}
                case Positions 
                of nil then nil 
                [] V|D then 
-                  pos(x:V.x+Teleport.x y:V.y+Teleport.y to:V.to)|{Worm Spaceship D Teleport}
+                  if Stop == false then 
+                     pos(x:Teleport.x y:Teleport.y to:V.to)|{Worm Spaceship D Teleport true}
+                  else
+                     if V.to == east then 
+                        pos(x:Teleport.x-1 y:Teleport.y to:V.to)|{Worm Spaceship D wormhole(x:Teleport.x-1 y:Teleport.y) true}
+                     elseif V.to == west then 
+                        pos(x:Teleport.x+1 y:Teleport.y to:V.to)|{Worm Spaceship D wormhole(x:Teleport.x+1 y:Teleport.y) true}
+                     elseif V.to == south then 
+                        pos(x:Teleport.x y: Teleport.y-1 to:V.to)|{Worm Spaceship D wormhole(x:Teleport.x y:Teleport.y-1) true}
+                     elseif V.to == north then 
+                        pos(x:Teleport.x y:Teleport.y+1 to:V.to)|{Worm Spaceship D wormhole(x:Teleport.x y:Teleport.y+1) true}
+                     end 
+                  end
                end 
             end 
          in 
-            {Worm Spaceship Spaceship.positions Spaceship.effects.1}
+            {Worm Spaceship Spaceship.positions Spaceship.effects.1 false}
          end 
 
          %{Browse {Worm Spaceship}}

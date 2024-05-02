@@ -10,26 +10,26 @@ in
 			   effects: nil
 			   strategy: [random(forward|turn(left)|turn(right)|forward|nil) random(forward|forward|turn(right)|turn(right)|nil) 
 			   repeat([forward repeat([turn(right)] times:4)] times:2) random(forward|turn(left)|turn(right)|forward|turn(left)|forward|nil) forward 
-			   random(turn(right)|turn(left)|forward|turn(right)|nil)]
+			   random(turn(right)|turn(left)|forward|turn(right)|nil)  random(turn(left)|turn(left)|turn(right)|forward|nil)]
 			   seismicCharge: NoBomb
 			  )
 		     spaceship(team:green name:steve
 			 positions: [pos(x:14 y:14 to:west) pos(x:15 y:14 to:west) pos(x:16 y:14 to:west) pos(x:17 y:14 to:west)]
 			 effects: nil
 			   strategy: [forward turn(right) turn(right) random(turn(left)|turn(right)|forward|forward|nil) turn(right) forward forward forward turn(right) turn(right) turn(left)
-				      repeat([forward] times:3) random(turn(right)|turn(left)|forward|turn(left)|forward|turn(right)|forward|turn(left)|nil) repeat([turn(right)] times:3)]
+				      repeat([forward] times:3) random(turn(right)|turn(left)|forward|turn(left)|forward|turn(right)|forward|turn(left)|nil) repeat([turn(right)] times:3) random(turn(left)|turn(left)|turn(right)|forward|nil)]
 			   seismicCharge: true|NoBomb
 			  )
 			spaceship(team:snow name:patrick
 			positions: [pos(x:19 y:20 to:west) pos(x:20 y:20 to:west) pos(x:21 y:20 to:west)]
 			effects: nil
-			   strategy: [turn(left) random(turn(right)|turn(left)|turn(left)|forward|forward|forward|turn(left)|nil) repeat([forward] times:3) repeat([turn(left) repeat([turn(right)] times:2)] times:3) random(forward|turn(left)|turn(right)|nil) random(forward|forward|turn(right)|turn(left)|nil)]
+			   strategy: [turn(right) turn(left) forward forward random(turn(right)|turn(left)|turn(left)|forward|forward|turn(left)|nil) repeat([forward] times:3) repeat([turn(left) repeat([turn(right)] times:2)] times:3) random(forward|turn(left)|turn(right)|nil) random(forward|forward|turn(right)|turn(left)|nil) random(turn(right)|turn(left)|turn(left)|forward|forward|turn(left)|nil) random(turn(left)|turn(left)|forward|forward|turn(left)|nil) forward turn(left) ]
 			   seismicCharge: NoBomb
 			  )
 		     spaceship(team:red name:john
 			   positions: [pos(x:9 y:5 to:south) pos(x:9 y:4 to:south) pos(x:10 y:4 to:west) pos(x:11 y:4 to:west) pos(x:12 y:4 to:west)]
 			   effects: nil
-			   strategy: [random(turn(left)|forward|turn(left)|turn(right)|forward|nil) forward forward repeat([turn(left)
+			   strategy: [ random(turn(left)|turn(left)|turn(right)|forward|nil)  random(turn(left)|turn(left)|turn(right)|forward|nil) random(turn(left)|forward|turn(left)|turn(right)|forward|nil) forward forward repeat([turn(left)
 							      repeat([forward]
 								     times:2)
 							     ]
@@ -40,8 +40,8 @@ in
 		    ]
           bonuses: [
             % Wormholes in both directions
-             bonus(position:pos(x:18 y:22)   color:yellow effect:wormhole(x:17 y:17) target:catcher)
-             bonus(position:pos(x:17 y:17) color:yellow effect:wormhole(x:12 y:12) target:catcher)
+             bonus(position:pos(x:18 y:22)   color:yellow effect:wormhole(x:4 y:4) target:catcher)
+             bonus(position:pos(x:17 y:17) color:yellow effect:wormhole(x:2 y:2) target:catcher)
  
             % Normal bonuses
              bonus(position:pos(x:11 y:11) color:red effect:revert target:catcher)
@@ -60,8 +60,8 @@ in
             ]
         bombs: [
          bomb(position:pos(x:15 y:12) explodesIn:3)
-         bomb(position:pos(x:9 y:8) explodesIn:3)
-         bomb(position:pos(x:20 y:8) explodesIn:2)
+         bomb(position:pos(x:9 y:8) explodesIn:10)
+         bomb(position:pos(x:2 y:3) explodesIn:20)
         ]
       )
          
