@@ -33,32 +33,34 @@ in
    local
       % Déclarez vos functions ici
       % Declare your functions here
-      declare 
+       
          NoBomb=false|NoBomb
          Space = spaceship(
             positions:[pos(x:4 y:2 to:east)]
             effects:[dropSeismicCharge(true|false|true|nil) scrap  revert dropSeismicCharge(true|nil) scrap]
-            strategy : nil 
+            strategy : [random(turn(left)|turn(right)|forward|nil)] 
             seismicCharge : NoBomb
          )
 
-               
+         %I = inverse(turn(left)|turn(right)|forward|nil)
+
+
          Spaceship = spaceship(
             positions:[pos(x:4 y:3 to:south) pos(x:4 y:2 to:south) pos(x:4 y:1 to:east)]
-           effects: [wormhole(x:10 y:1) wormhole(x:1 y:5) scrap revert]
+           effects: [minus wormhole(x:10 y:1) wormhole(x:1 y:5) scrap revert]
            strategy : nil
            seismicCharge : NoBomb
          )
 
          FuriousSpaceship = spaceship(
             positions:[pos(x:4 y:1 to:west) pos(x:4 y:2 to:north) pos(x:4 y:3 to:north)]
-            effects:[minus minus dropSeismicCharge(true|nil) scrap ] 
+            effects:[minus dropSeismicCharge(true|nil) scrap ] 
             strategy : [repeat([turn(right)] times:2)]
             seismicCharge : NoBomb
             )
 
          
-          %La fonction renvoie les attributs de l'effet du spaceship
+         %La fonction renvoie les attributs de l'effet du spaceship
          % on considère que c'est l'effet minus qui est supprimé et ignorer dans le record effects du Spaceship 
          % spaceship ::=  spaceship(
          %               positions: [
@@ -88,7 +90,7 @@ in
             {DeleteMinus Spaceship Spaceship.effects} 
          end 
 
-         {Browse {DeleteMinus FuriousSpaceship}}
+         %{Browse {DeleteMinus FuriousSpaceship}}
 
 
          %La fonction renvoie les attributs de l'effet du spaceship
@@ -217,6 +219,53 @@ in
 
          %{Browse {DeleteRevert Spaceship}}
 
+         % La strategy sert à renvoyer la même liste du serpent dans un ordre aléatoire à l'aide du record random(H|T) 
+         % strategy ::= <instruction> '|' <strategy> '|' random(H|T)
+         %            | repeat(<strategy> times:<integer>) '|' <strategy>
+         %            | nil
+         proc{Swap Tab I J} 
+            Temp = Tab.I 
+         in
+            Tab.I := Tab.J 
+            Tab.J := Temp 
+         end 
+
+         fun {ShuffleSpaceship Strategy}
+            fun {ShuffleSpaceship Strategy Shuffle}
+               local 
+                  Len = ({Length Shuffle} - 1)
+                  T = {NewArray 0 Len 0} 
+                  I = {NewCell 0}
+               in
+                  for Elem in Shuffle do 
+                        T.@I := Elem 
+                        I := @I + 1
+                  end 
+
+                  for Iter in 0..Len do 
+                        R = {OS.rand} mod (Len-Iter+1)
+                  in
+                        {Swap T R Len-Iter}
+                  end 
+                  {Record.toList {Array.toRecord '' T}}
+               end 
+            end
+         in
+            {ShuffleSpaceship Strategy Strategy.1} 
+         end 
+
+         %{Browse {ShuffleSpaceship Space.strategy.1}}
+
+         % La fonction prend comme effet minus qui se chargera de réduire la taille du spaceship à un si le vaisseau n'est a une longueur plus grande que un 
+         % Par contre si le vaisseau a une longueur de 1 on le renvoie telle quelle 
+         %  Spaceship ::=  spaceship(
+         %               positions: [
+         %                  pos(x:<P> y:<P> to:<direction>) % Head
+         %                  ...
+         %                  pos(x:<P> y:<P> to:<direction>) % Tail
+         %               ]
+         %               effects: [minus|revert|wormhole(x:X y:Y)|scrap|revert|wormhole(x:X y:Y)|scrap|dropSeismicCharge(H|T)... ...]
+         %            )
          fun {Minus Spaceship} 
             fun {Minus Spaceship Positions}  
                case Positions 
@@ -233,8 +282,8 @@ in
             {Minus Spaceship Spaceship.positions}
          end 
 
-         {Browse {Minus FuriousSpaceship}}
 
+         % {Browse {Minus FuriousSpaceship}}
 
          % La fonction ajoute un élément à la queue de l'astronef en fonction de la direction et des coordonnées du dernière élément du vaisseau
          %:input:
@@ -420,6 +469,7 @@ in
 
          %{Browse {Worm Spaceship}}
 
+
          % La fonction avance l'astronef vers l'avant  
          % Spaceship ::=  spaceship(
          %               positions: [
@@ -465,6 +515,7 @@ in
          in 
             {Forward Spaceship Spaceship.positions false}
          end 
+
 
          % La fonction tourne vers la gauche le vaisseau 
          % Spaceship ::=  spaceship(
@@ -571,8 +622,8 @@ in
          % la fonction va répéter N times l'action dans la liste du repeat puis vérifier si il y'a bien un repeat imbrique ou non 
          % Strategy ::= repeat(<strategy> times:<integer>)
          % Exemple : 
-         % : input :  repeat([forward repeat([turn(left)] times:4) times:3)
-         % : output : [forward forward forward forward turn(left) turn(left) turn(left) turn(left)]
+         % :input:  repeat([forward repeat([turn(left)] times:4) times:3)
+         % :output: [forward forward forward forward turn(left) turn(left) turn(left) turn(left)]
          fun{Repeat Strategy}
             case Strategy 
             of nil then nil
@@ -615,8 +666,13 @@ in
                         % Si la tête du Spaceship.effects = charge sismique alors on supprime et ignore tout les effets du même type tout ajoutant l effet dans les charges sismique du Spaceship en Head 
                         % Spaceship.seismicCharge ::=  L %Head | Spaceship.seismicCharge  %Tail 
                         NewSpaceship = spaceship(positions:Spaceship.positions effects:{DeleteDrop Spaceship} seismicCharge:{Bomber Spaceship})
+                     [] minus then 
+                        % Si la tête du Spaceship.effetcs = minus alors on supprime le dernière élément de la liste dans la positions du vaisseau mais si par la longueur est egal a 1 
+                        % elle demeure inchangé 
+                        % La liste des effets va supprimer et ignorer les effets du même type 
+                        NewSpaceship = spaceship(positions:{Minus Spaceship} effects:{DeleteMinus Spaceship} seismicCharge:Spaceship.seismicCharge)
                      [] scrap then
-                        % Si la tête du Spaceship.effects = scrap alors on ajoute un wagon à la queue du vaisseau tout en supprimant et ignorant les effets du même types dans effetcs  
+                        % Si la tête du Spaceship.effects = scrap alors on ajoute un wagon à la queue du vaisseau tout en supprimant et ignorant les effets du même types dans effects  
                         NewSpaceship = spaceship(positions:{Scrap Spaceship} effects:{DeleteScrap Spaceship} seismicCharge:Spaceship.seismicCharge) 
                      [] revert then 
                         % Si la tête du Spaceship.effects = revert alors on inverse le vaisseau complétement on inversant également l'orientation 
@@ -669,6 +725,8 @@ in
                of nil then nil 
                [] dropSeismicCharge(L) then 
                   ReturnSpaceship = spaceship(positions:{Move EffetShip Instruction} effects:EffetShip.effects seismicCharge:EffetShip.seismicCharge)
+               [] minus then 
+                  ReturnSpaceship = spaceship(positions:{Move EffetShip Instruction} effects:EffetShip.effects seismicCharge:EffetShip.seismicCharge)
                [] scrap then 
                   ReturnSpaceship = spaceship(positions:{Move EffetShip Instruction} effects:EffetShip.effects seismicCharge:EffetShip.seismicCharge)
                [] revert then 
@@ -680,7 +738,7 @@ in
          end 
       end   
       
-      %{Browse {Next Spaceship turn(right)}}
+      %{Browse {Next FuriousSpaceship turn(right)}}
 
       % La fonction qui décode la stratégie d'un serpent en une liste de fonctions. Chacune correspond
       % à un instant du jeu et applique l'instruction devant être exécutée à cet instant au spaceship
@@ -701,6 +759,11 @@ in
                [] turn(left) then
                   fun {$ Spaceship} {Next Spaceship H} end | {DecodeStrategy T}
                end
+            [] random then 
+               case H.1 of nil then nil 
+               [] P|D then 
+                  {DecodeStrategy {Append {ShuffleSpaceship H} T}}
+               end
             [] repeat then
                case H.1 of nil then nil
                [] F|S then
@@ -712,18 +775,15 @@ in
          end
       end
 
-      %DecodedFunctions = {DecodeStrategy FuriousSpaceship.strategy}   
-      %{Browse DecodedFunctions}
+      % DecodedFunctions = {DecodeStrategy FuriousSpaceship.strategy}  
 
-
-
-
+      % {Browse DecodedFunctions}
 
       % Options
       Options = options(
 		   % Fichier contenant le scénario (depuis Dossier)
 		   % Path of the scenario (relative to Dossier)
-		   scenario:'scenario/scenario_crazy.oz'
+		   scenario:'scenario/Scenario.oz'
 		   % Utilisez cette touche pour quitter la fenêtre
 		   % Use this key to leave the graphical mode
 		   closeKey:'Escape'

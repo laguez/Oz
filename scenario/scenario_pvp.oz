@@ -26,6 +26,8 @@ in
 			  % Normal bonuses
 		      bonus(position:pos(x:11 y:11) color:red effect:revert target:catcher)
 		      bonus(position:pos(x:12 y:12) color:black effect:scrap target:catcher)
+
+			  bonus(position:pos(x:15 y:3) color:blue effect:minus target:catcher)
 		     ]
 	    bombs: nil
 	   )
