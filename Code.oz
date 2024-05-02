@@ -33,13 +33,15 @@ in
    local
       % Déclarez vos functions ici
       % Declare your functions here
+      declare 
          NoBomb=false|NoBomb
          Space = spaceship(
-            positions:[pos(x:4 y:2 to:east) pos(x:3 y:2 to:east) pos(x:2 y:2 to:east)]
+            positions:[pos(x:4 y:2 to:east)]
             effects:[dropSeismicCharge(true|false|true|nil) scrap  revert dropSeismicCharge(true|nil) scrap]
             strategy : nil 
             seismicCharge : NoBomb
          )
+
                
          Spaceship = spaceship(
             positions:[pos(x:4 y:3 to:south) pos(x:4 y:2 to:south) pos(x:4 y:1 to:east)]
@@ -50,10 +52,44 @@ in
 
          FuriousSpaceship = spaceship(
             positions:[pos(x:4 y:1 to:west) pos(x:4 y:2 to:north) pos(x:4 y:3 to:north)]
-            effects:nil
+            effects:[minus minus dropSeismicCharge(true|nil) scrap ] 
             strategy : [repeat([turn(right)] times:2)]
             seismicCharge : NoBomb
             )
+
+         
+          %La fonction renvoie les attributs de l'effet du spaceship
+         % on considère que c'est l'effet minus qui est supprimé et ignorer dans le record effects du Spaceship 
+         % spaceship ::=  spaceship(
+         %               positions: [
+         %                  pos(x:<P> y:<P> to:<direction>) % Head
+         %                  ...
+         %                  pos(x:<P> y:<P> to:<direction>) % Tail
+         %               ]
+         %               effects: [minus|dropSeismicCharge(true|nil)|minus|wormhole(x:X y:Y)|scrap|revert|wormhole(x:X y:Y)|scrap|dropSeismicCharge(H|T)... ...]
+         %            )
+         %  : output : 
+         % Spaceship.effects ::= [dropSeismicCharge(true|nil)|wormhole(x:X y:Y)|scrap|revert|wormhole(x:X y:Y)|scrap|dropSeismicCharge(H|T)... ...]
+         fun {DeleteMinus Spaceship} 
+            fun {DeleteMinus Spaceship Effets} 
+               case Effets 
+               of nil then nil 
+               [] H|T then 
+                  case H 
+                  of nil then nil 
+                  [] minus then 
+                     {DeleteMinus Spaceship T} 
+                  else 
+                     H|{DeleteMinus Spaceship T}
+                  end 
+               end 
+            end 
+         in 
+            {DeleteMinus Spaceship Spaceship.effects} 
+         end 
+
+         {Browse {DeleteMinus FuriousSpaceship}}
+
 
          %La fonction renvoie les attributs de l'effet du spaceship
          % on considère que c'est l'effet dropSeismicCharge qui est supprimé et ignorer dans le record effects du Spaceship 
@@ -66,7 +102,7 @@ in
          %               effects: [dropSeismicCharge(true|nil)|wormhole(x:X y:Y)|scrap|revert|wormhole(x:X y:Y)|scrap|dropSeismicCharge(H|T)... ...]
          %            )
          %  : output : 
-         % Sapceship.effects ::= [scrap|revert|scrap|dropSeismicCharge(H|T)... ...]
+         % Spaceship.effects ::= [scrap|revert|scrap|dropSeismicCharge(H|T)... ...]
          fun {DeleteDrop Spaceship}
             fun {DeleteDrop Spaceship Effets}
                case Effets 
@@ -98,7 +134,7 @@ in
          %               effects: [wormhole(x:X y:Y)|scrap|revert|wormhole(x:X y:Y)|scrap|dropSeismicCharge(H|T)... ...]
          %            )
          %  : output : 
-         % Sapceship.effects ::= [scrap|revert|scrap|dropSeismicCharge(H|T)... ...]
+         % Spaceship.effects ::= [scrap|revert|scrap|dropSeismicCharge(H|T)... ...]
          fun {DeleteWormhole Spaceship}
             fun{DeleteWormhole Spaceship Effets}
                case Effets
@@ -131,7 +167,7 @@ in
          %               effects: [scrap|wormhole(x:X y:Y)|scrap|revert|wormhole(x:X y:Y)|scrap|dropSeismicCharge(H|T)... ...]
          %            )
          % :output: 
-         % Sapceship.effects ::= [wormhole(x:X y:Y)|revert|wormhole(x:X y:Y)|dropSeismicCharge(H|T)... ...]
+         % Spaceship.effects ::= [wormhole(x:X y:Y)|revert|wormhole(x:X y:Y)|dropSeismicCharge(H|T)... ...]
          fun {DeleteScrap Spaceship} 
             fun {DeleteScrap Spaceship Effets}
                case Effets
@@ -162,7 +198,7 @@ in
          %               effects: [revert|wormhole(x:X y:Y)|scrap|revert|wormhole(x:X y:Y)|scrap|dropSeismicCharge(H|T)... ...]
          %            )
          % :output: 
-         % Sapceship.effects ::= [wormhole(x:X y:Y)|revert|wormhole(x:X y:Y)|dropSeismicCharge(H|T)... ...]
+         % Spaceship.effects ::= [wormhole(x:X y:Y)|revert|wormhole(x:X y:Y)|dropSeismicCharge(H|T)... ...]
          fun {DeleteRevert Spaceship} 
             fun {DeleteRevert Spaceship Effets} 
                case Effets 
@@ -180,6 +216,25 @@ in
          end 
 
          %{Browse {DeleteRevert Spaceship}}
+
+         fun {Minus Spaceship} 
+            fun {Minus Spaceship Positions}  
+               case Positions 
+               of nil then nil 
+               [] H|T then 
+                  if {Length T} == 1 then 
+                     H|nil 
+                  else 
+                     H|{Minus Spaceship T}
+                  end 
+               end
+            end 
+         in 
+            {Minus Spaceship Spaceship.positions}
+         end 
+
+         {Browse {Minus FuriousSpaceship}}
+
 
          % La fonction ajoute un élément à la queue de l'astronef en fonction de la direction et des coordonnées du dernière élément du vaisseau
          %:input:
@@ -536,7 +591,7 @@ in
 
          % {Browse {Repeat FuriousSpaceship.strategy.1}}
 
-         
+
          % La fonction va modifié les arguments du spaceship en fonction de la tête de la liste Spaceship.effects 
          % Spaceship ::=  spaceship(
          %               positions: [
